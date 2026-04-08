@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <title>To-do</title>
+</head>
+
+<body class="bg-light mt-5">
+    <div class="container">
+        <div class="row justify-content-center">
+            <!-- To-Do -->
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h4 class="text-center mb-3">To-Do</h4>
+
+                    <div class="input-group mb-3">
+                        <input id="todo-input" class="form-control" placeholder="할 일 입력" />
+                        <button id="add-btn" class="btn btn-primary">추가</button>
+                    </div>
+
+                    <ul id="todo-list" class="list-group"></ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const todoInput = document.querySelector("#todo-input");
+        const addBtn = document.querySelector("#add-btn");
+        const todoList = document.querySelector("#todo-list");
+
+        const CACHE_KEY = "todos";
+
+        let todos = [];
+        const savedTodos = localStorage.getItem(CACHE_KEY);
+        if (savedTodos) {
+            todos = JSON.parse(savedTodos);
+            renderTodos();
+        };
+
+        function createTodoElement(text) {
+            const li = document.createElement("li");
+            li.className = "list-group-item d-flex justify-content-between align-items-center";
+            li.textContent = text;
+            return li;
+        }
+
+        function renderTodos() {
+            todoList.innerHTML = "";
+
+            for (const [index, todo] of todos.entries()) {
+                const li = createTodoElement(todo);
+
+                const btn = document.createElement("button");
+                btn.className = "btn btn-sm btn-danger";
+                btn.textContent = "삭제";
+                btn.addEventListener("click", () => deleteTodo(index));
+
+                li.appendChild(btn)
+                todoList.appendChild(li);
+            };
+        };
+
+        // Todo 삭제
+        function deleteTodo(index) {
+            todos.splice(index, 1);
+            saveTodos();
+            renderTodos();
+        };
+
+        // Todos 저장(변경된 데이터를 로컬 스토리지에도 반영)
+        function saveTodos() {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(todos));
+        };
+
+        // Todo 추가
+        function addTodo() {
+            const text = todoInput.value.trim();
+            if (text === "") {
+                alert("할 일을 입력하세요!");
+                return;
+            }
+
+            todoInput.value = "";
+
+            todos.push(text);
+            saveTodos();
+
+            renderTodos(); 
+        };
+
+        // addBtn.addEventListener("click", addTodo);
+        // todoInput.addEventListener("keydown", (e) => {
+        //     // 엔터를 누르면, todo 생성  add 
+        //     if (e.key === "Enter") addTodo();
+        // });
+        
+        // --> 강의시간엔 이렇게 작성했는데 오류 발생  ex. '복습하기'가 전체로 한 번 들어가고, 마지막 글자인 '기'가 한 번 더 추가) 복습하기 하고 띄어쓰기하고 엔터치면 오류발생 안하긴 함.. 
+        // 컴퓨터(브라우저)는 사용자가 글자를 조립하고 있는 중인지 아닌지를 계속 감시하고 있는데, 한글 입력을 마치려고 Enter를 누르는 순간, 
+        // 브라우저가 이걸 '할 일 추가해라!'라는 명령으로 두 번 오해해서 함수를 두 번 실행해버리는 것
+
+
+        addBtn.addEventListener("click", addTodo);
+        todoInput.addEventListener("keydown", (e) => {
+            // 💡 한글 조립 중일 때는 이벤트 발생을 무시하고 멈춘다!  **"사용자가 지금 한글 글자를 조립(Composing)하고 있는 중이라면 엔터키를 무시해!"**
+            if (e.isComposing) return; 
+
+            // 글자 조립이 완전히 끝난 상태에서 누른 엔터만 진짜로 인정한다.
+            if (e.key === "Enter") addTodo();
+        });
+    </script>
+
+
+</body>
+
+</html>
